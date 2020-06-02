@@ -79,6 +79,11 @@ declare namespace XlsxPopulate {
     printOptions(attributeName: string, attributeEnabled: undefined | boolean): Sheet
     printGridLines(): boolean
     printGridLines(enabled: undefined | boolean): Sheet
+    panes(opts : PanesOptions): Sheet
+    freezePanes(xSplit: number, ySplit: number): Sheet
+    freezePanes(topLeftCell: string): Sheet
+    splitPanes(xSplit : number, ySplit : number): Sheet
+    resetPanes(): Sheet
     pageMargins(attributeName: string): number
     pageMargins(attributeName: string, attributeStringValue: undefined | number | string): Sheet
     pageMarginsPreset(): string
@@ -157,6 +162,14 @@ declare namespace XlsxPopulate {
     width(width: number): Column
     workbook(): Workbook
     addPageBreak(): Column
+  }
+
+  class PanesOptions {
+    activePane: string
+    state: string
+    topLeftCell: string
+    xSplit: number
+    ySplit: number
   }
 
   class CoreProperties {
