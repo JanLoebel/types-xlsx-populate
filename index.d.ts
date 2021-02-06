@@ -12,7 +12,7 @@ declare class XlsxPopulate {
   static numberToDate(number: number): Date
 }
 
-interface StyleAble<T> {
+class StyleAble<T> {
   style<T extends keyof Style>(name: T): Style[T]
   style<T extends keyof Style>(names: T[]): { [key in T]: Style[T] }
   style<T extends keyof Style>(name: T, value: Style[T]): T
@@ -23,6 +23,8 @@ interface StyleAble<T> {
 
 declare namespace XlsxPopulate {
   class Workbook {
+    private constructor(...args: any[]): this;
+
     activeSheet(): Sheet
     activeSheet(sheet: Sheet | string | number): Workbook
     addSheet(name: string, indexOrBeforeSheet?: number | string | Sheet): Sheet
@@ -45,6 +47,8 @@ declare namespace XlsxPopulate {
   }
 
   class Sheet {
+    private constructor(...args: any[]): this;
+
     _rows: Row[] // private field
 
     active(): boolean
@@ -100,7 +104,9 @@ declare namespace XlsxPopulate {
     pageMarginsPreset(presetName: string, presetAttributes: object): Sheet
   }
 
-  class Row implements StyleAble<this> {
+  class Row extends StyleAble<this> {
+    private constructor(...args: any[]): this;
+
     _cells: Cell[];
     address(opts?: object): string
     cell(columnNameOrNumber: string | number ): Cell
@@ -116,7 +122,9 @@ declare namespace XlsxPopulate {
 
   type cellValue = string | boolean | number | Date | undefined | null;
 
-  class Cell implements StyleAble<this> {
+  class Cell extends StyleAble<this> {
+    private constructor(...args: any[]): this;
+
     active(): boolean
     active(active: boolean): Cell
     address(opts?: object): string
@@ -146,7 +154,9 @@ declare namespace XlsxPopulate {
     addHorizontalPageBreak(): Cell
   }
 
-  class Column implements StyleAble<this> {
+  class Column extends StyleAble<this> {
+    private constructor(...args: any[]): this;
+
     address(opts?: object): string
     cell(rowNumber: number): Cell
     columnName(): string
@@ -172,7 +182,7 @@ declare namespace XlsxPopulate {
     [key: string]: any
   }
 
-  class Range implements StyleAble<this> {
+  class Range extends StyleAble<this> {
     address(opts?: object): string
     cell(ri: number, ci: number): Cell
     autoFilter(): Range
