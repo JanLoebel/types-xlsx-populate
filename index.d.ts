@@ -12,6 +12,15 @@ declare class XlsxPopulate {
   static numberToDate(number: number): Date
 }
 
+interface StyleAble<T> {
+  style<T extends keyof Style>(name: T): Style[T]
+  style<T extends keyof Style>(names: T[]): { [key in T]: Style[T] }
+  style<T extends keyof Style>(name: T, value: Style[T]): T
+  //style(name: any[][]): T
+  //style(styles: {[key: string]: any}): T
+  style(style: Style): T
+}
+
 declare namespace XlsxPopulate {
   class Workbook {
     activeSheet(): Sheet
@@ -91,7 +100,8 @@ declare namespace XlsxPopulate {
     pageMarginsPreset(presetName: string, presetAttributes: object): Sheet
   }
 
-  class Row {
+  class Row implements StyleAble<this> {
+    _cells: Cell[];
     address(opts?: object): string
     cell(columnNameOrNumber: string | number ): Cell
     height(): undefined | number
@@ -100,16 +110,13 @@ declare namespace XlsxPopulate {
     hidden(hidden: boolean): Row
     rowNumber(): number
     sheet(): Sheet
-    style(name: string): any
-    style(names: string[]): {[key: string]: any}
-    style(name: string, value: any): Cell
-    style(styles: {[key: string]: any}): Cell
-    style(style: Style): Cell
     workbook(): Workbook
     addPageBreak(): Row
   }
 
-  class Cell {
+  type cellValue = string | boolean | number | Date | undefined | null;
+
+  class Cell implements StyleAble<this> {
     active(): boolean
     active(active: boolean): Cell
     address(opts?: object): string
@@ -132,20 +139,14 @@ declare namespace XlsxPopulate {
     row(): Row
     rowNumber(): number
     sheet(): Sheet
-    style(name: string): any
-    style(names: string[]): {[key: string]: any}
-    style(name: string, value: any): Cell
-    style(name: any[][]): Range
-    style(styles: {[key: string]: any}): Cell
-    style(style: Style): Cell
-    value(): string | boolean | number | Date | undefined
-    value(value: string | boolean | number | null | undefined): Cell
+    value(): cellValue
+    value(value: cellValue): Cell
     value(): Range
     workbook(): Workbook
     addHorizontalPageBreak(): Cell
   }
 
-  class Column {
+  class Column implements StyleAble<this> {
     address(opts?: object): string
     cell(rowNumber: number): Cell
     columnName(): string
@@ -153,11 +154,6 @@ declare namespace XlsxPopulate {
     hidden(): boolean
     hidden(hidden: boolean): Column
     sheet(): Sheet
-    style(name: string): any
-    style(names: string[]): {[key: string]: any}
-    style(name: string, value: any): Cell
-    style(styles: {[key: string]: any}): Cell
-    style(style: Style): Cell
     width(): undefined | number
     width(width: number): Column
     workbook(): Workbook
@@ -176,36 +172,33 @@ declare namespace XlsxPopulate {
     [key: string]: any
   }
 
-  class Range {
+  class Range implements StyleAble<this> {
     address(opts?: object): string
     cell(ri: number, ci: number): Cell
     autoFilter(): Range
     cells(): [Cell][]
     clear(): Range
     endCell(): Cell
-    forEach(callback: Function): Range
+    forEach(callback: (cell: Cell, rowIndex: number, columnIndex: number, range: this) => void): Range
     formula(): string | undefined
     formula(formula: string): Range
-    map(callback: Function): any[][]
+    map<T>(callback: (cell: Cell, rowIndex: number, columnIndex: number, range: this) => T): T[][]
     merged(): boolean
     merged(merged: boolean): Range
     dataValidation(): object | undefined
     dataValidation(dataValidation: object | undefined): Range
-    reduce(callback: Function, initialValue?: any): any
+    reduce<T>(callback: (obj: T, cell: Cell, rowIndex: number, columnIndex: number, range: this) => T, initialValue?: T): T
     sheet(): Sheet
+    style(styles: {
+      [key: keyof Styles]: ((cell: Cell, rowIndex: number, columnIndex: number, range: this) => Style) | Style[][] | Style
+    }): Range
     startCell(): Cell
-    style(name: string): any[][]
-    style(names: string[]): {[key: string]: any[][]}
-    style(name: string): Range
-    style(name: string, value: any): Range
-    style(styles: {[key: string]: Function | any[][] | any}): Range
-    style(style: Style): Range
-    tap(callback: Function): Range
-    thru(callback: Function): any
-    value(): any[][]
-    value(callback: Function): Range
-    value(values: any[][]): Range
-    value(value: any): Range
+    tap(callback: (cell: Cell, rowIndex: number, columnIndex: number, range: this) => void): Range
+    thru<T>(callback: (cell: Cell, rowIndex: number, columnIndex: number, range: this) => T): T
+    value(): cellValue[][]
+    value(callback: (cell: Cell, rowIndex: number, columnIndex: number, range: this) => cellValue): Range
+    value(values: cellValue[][]): Range
+    value(value: cellValue): Range
     workbook(): Workbook
   }
 
@@ -222,7 +215,9 @@ declare namespace XlsxPopulate {
     tint?: number
   }
 
-  class Style {
+  type BorderStyle = 'hair' | 'dotted' | 'dashDotDot' | 'dashed' | 'mediumDashDotDot' | 'thin' | 'slantDashDot' | 'mediumDashDot' | 'mediumDashed' | 'medium' | 'thick' | 'double';
+
+  class Style {
     bold?: boolean
     italic?: boolean
     underline?: boolean | string
@@ -232,13 +227,13 @@ declare namespace XlsxPopulate {
     fontSize?: number
     fontFamily?: string
     fontColor?: Color | string
-    horizontalAlignment?: string
+    horizontalAlignment?: 'left' | 'center' | 'right' | 'fill' | 'justify' | 'centerContinuous' | 'distributed'
     justifyLastLine?: boolean
     indent?: number
-    verticalAlignment?: string
+    verticalAlignment?: 'top' | 'center' | 'bottom' | 'justify' | 'distributed'
     wrapText?: boolean
     shrinkToFit?: boolean
-    textDirection?: string
+    textDirection?: 'left-to-right' | 'right-to-left'
     textRotation?: number
     angleTextCounterclockwise?: boolean
     angleTextClockwise?: boolean
@@ -247,50 +242,50 @@ declare namespace XlsxPopulate {
     verticalText?: boolean
     fill?: SolidFill | PatternFill | GradientFill
     border?: Borders | Border
-    borderColor?: Color | string
-    borderStyle?: string
-    leftBorderColor?: Color | string
-    rightBorderColor?: Color | string
-    topBorderColor?: Color | string
-    bottomBorderColor?: Color | string
-    diagonalBorderColor?: Color | string
-    leftBorderStyle?: string
-    rightBorderStyle?: string
-    topBorderStyle?: string
-    bottomBorderStyle?: string
-    diagonalBorderStyle?: string
-    diagonalBorderDirection?: string
+    borderColor?: Color | string | number
+    borderStyle?: BorderStyle
+    leftBorderColor?: Color | string | number
+    rightBorderColor?: Color | string | number
+    topBorderColor?: Color | string | number
+    bottomBorderColor?: Color | string | number
+    diagonalBorderColor?: Color | string | number
+    leftBorderStyle?: BorderStyle
+    rightBorderStyle?: BorderStyle
+    topBorderStyle?: BorderStyle
+    bottomBorderStyle?: BorderStyle
+    diagonalBorderStyle?: BorderStyle
+    diagonalBorderDirection?: 'up' | 'down' | 'both'
   }
 
   class SolidFill {
-    type: string
+    type: 'solid'
     color: Color | string
   }
 
   class PatternFill {
-    type: string
-    pattern: string
+    type: 'pattern'
+    pattern: 'gray125' | 'darkGray' | 'mediumGray' | 'lightGray' | 'gray0625' | 'darkHorizontal' | 'darkVertical' | 'darkDown' | 'darkUp' | 'darkGrid' | 'darkTrellis' | 'lightHorizontal' | 'lightVertical' | 'lightDown' | 'lightUp' | 'lightGrid' | 'lightTrellis'
     foreground: Color | string
     background: Color | string
   }
 
   class Border {
-    style: string
+    style: BorderStyle
     color: Color | string
     direction?: string
   }
 
   class Borders {
-    left?: Border | string
-    right?: Border | string
-    top?: Border | string
-    bottom?: Border | string
-    diagonal?: Border | string
+    left?: Border | BorderStyle
+    right?: Border | BorderStyle
+    top?: Border | BorderStyle
+    bottom?: Border | BorderStyle
+    diagonal?: Border | BorderStyle
   }
 
   class GradientFill {
-    type:	string
-    gradientType?: string
+    type:	'gradient'
+    gradientType?: 'linear' | 'path'
     stops: {
       position: number
       color: Color | string
