@@ -13,12 +13,10 @@ declare class XlsxPopulate {
 }
 
 class StyleAble<T> {
-  style<T extends keyof Style>(name: T): Style[T]
-  style<T extends keyof Style>(names: T[]): { [key in T]: Style[T] }
-  style<T extends keyof Style>(name: T, value: Style[T]): T
-  //style(name: any[][]): T
-  //style(styles: {[key: string]: any}): T
-  style(style: Style): T
+  style<K extends keyof XlsxPopulate.Style>(name: K): XlsxPopulate.Style[K]
+  style<K extends keyof XlsxPopulate.Style>(names: K[]): { [key in T]: XlsxPopulate.Style[K] }
+  style<K extends keyof XlsxPopulate.Style>(name: K, value: XlsxPopulate.Style[K]): T
+  style(style: XlsxPopulate.Style): T
 }
 
 declare namespace XlsxPopulate {
