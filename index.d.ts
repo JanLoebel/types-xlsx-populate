@@ -12,11 +12,11 @@ declare class XlsxPopulate {
   static numberToDate(number: number): Date
 }
 
-class StyleAble<T> {
+class StyleAble {
   style<K extends keyof XlsxPopulate.Style>(name: K): XlsxPopulate.Style[K]
-  style<K extends keyof XlsxPopulate.Style>(names: K[]): { [key in T]: XlsxPopulate.Style[K] }
-  style<K extends keyof XlsxPopulate.Style>(name: K, value: XlsxPopulate.Style[K]): T
-  style(style: XlsxPopulate.Style): T
+  style<K extends keyof XlsxPopulate.Style>(names: K[]): { [key in K]: XlsxPopulate.Style[K] }
+  style<K extends keyof XlsxPopulate.Style>(name: K, value: XlsxPopulate.Style[K]): this
+  style(style: XlsxPopulate.Style): this
 }
 
 declare namespace XlsxPopulate {
@@ -102,7 +102,7 @@ declare namespace XlsxPopulate {
     pageMarginsPreset(presetName: string, presetAttributes: object): Sheet
   }
 
-  class Row extends StyleAble<this> {
+  class Row extends StyleAble {
     private constructor(...args: any[]): this;
 
     _cells: Cell[];
@@ -120,7 +120,7 @@ declare namespace XlsxPopulate {
 
   type cellValue = string | boolean | number | Date | undefined | null;
 
-  class Cell extends StyleAble<this> {
+  class Cell extends StyleAble {
     private constructor(...args: any[]): this;
 
     active(): boolean
@@ -147,12 +147,11 @@ declare namespace XlsxPopulate {
     sheet(): Sheet
     value(): cellValue
     value(value: cellValue): Cell
-    value(): Range
     workbook(): Workbook
     addHorizontalPageBreak(): Cell
   }
 
-  class Column extends StyleAble<this> {
+  class Column extends StyleAble {
     private constructor(...args: any[]): this;
 
     address(opts?: object): string
@@ -180,7 +179,7 @@ declare namespace XlsxPopulate {
     [key: string]: any
   }
 
-  class Range extends StyleAble<this> {
+  class Range extends StyleAble {
     address(opts?: object): string
     cell(ri: number, ci: number): Cell
     autoFilter(): Range
@@ -198,7 +197,7 @@ declare namespace XlsxPopulate {
     reduce<T>(callback: (obj: T, cell: Cell, rowIndex: number, columnIndex: number, range: this) => T, initialValue?: T): T
     sheet(): Sheet
     style(styles: {
-      [key: keyof Styles]: ((cell: Cell, rowIndex: number, columnIndex: number, range: this) => Style) | Style[][] | Style
+      [K in keyof Style]: ((cell: Cell, rowIndex: number, columnIndex: number, range: this) => Style[K]) | Style[K][][] | Style[K]
     }): Range
     startCell(): Cell
     tap(callback: (cell: Cell, rowIndex: number, columnIndex: number, range: this) => void): Range
